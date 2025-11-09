@@ -20,7 +20,7 @@ MonteCarloResult MonteCarlo::findBestMove(HexGrid& grid, int simulations) {
     }
     
     std::shuffle(emptyCells.begin(), emptyCells.end(), rng);
-    int movesToTry = std::min(25, (int)emptyCells.size());
+    int movesToTry = std::min(20, (int)emptyCells.size());  // Increased from 15
     
     Move bestMove;
     double bestWinRate = -1.0;
@@ -53,12 +53,20 @@ MonteCarloResult MonteCarlo::findBestMove(HexGrid& grid, int simulations) {
 }
 
 Player MonteCarlo::simulatePlayout(HexGrid& grid, Player originalPlayer) {
-    const int MAX_MOVES = 200;
+    const int MAX_MOVES = 50;  // Reduced from 200
     int movesMade = 0;
     
     std::vector<HexCoord> emptyCells;
     
-    while (grid.getWinner() == Player::NONE && movesMade < MAX_MOVES) {
+    Player winner = Player::NONE;
+    
+    // Check for winner every 3 moves instead of every move
+    while (movesMade < MAX_MOVES) {
+        if (movesMade % 3 == 0) {  // Only check winner every 3 moves
+            winner = grid.getWinner();
+            if (winner != Player::NONE) break;
+        }
+        
         emptyCells.clear();
         for (const auto& kv : grid.getGrid()) {
             if (kv.second == Player::NONE) {
@@ -66,7 +74,10 @@ Player MonteCarlo::simulatePlayout(HexGrid& grid, Player originalPlayer) {
             }
         }
         
-        if (emptyCells.empty()) break;
+        if (emptyCells.empty()) {
+            winner = grid.getWinner();  // Final check
+            break;
+        }
         
         std::uniform_int_distribution<int> dist(0, emptyCells.size() - 1);
         HexCoord randomCoord = emptyCells[dist(rng)];
@@ -75,8 +86,12 @@ Player MonteCarlo::simulatePlayout(HexGrid& grid, Player originalPlayer) {
         movesMade++;
     }
     
-    Player winner = grid.getWinner();
+    // Final winner check if we exited due to MAX_MOVES
+    if (winner == Player::NONE) {
+        winner = grid.getWinner();
+    }
     
+    // Undo all moves
     for (int i = 0; i < movesMade; ++i) {
         grid.undoMove();
     }

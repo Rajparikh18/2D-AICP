@@ -23,7 +23,7 @@ MinimaxResult Minimax::findBestMove(HexGrid& grid, int depth) {
     double alpha = -std::numeric_limits<double>::max();
     double beta = std::numeric_limits<double>::max();
     
-    int movesToCheck = std::min(30, (int)emptyCells.size());
+    int movesToCheck = std::min(35, (int)emptyCells.size());  // Increased from 30
     for (int i = 0; i < movesToCheck; ++i) {
         const HexCoord& coord = emptyCells[i];
         
@@ -68,7 +68,7 @@ double Minimax::minimaxAlphaBeta(HexGrid& grid, int depth, double alpha, double 
     std::shuffle(emptyCells.begin(), emptyCells.end(), gen);
     
     double maxScore = -std::numeric_limits<double>::max();
-    int movesToCheck = std::min(20, (int)emptyCells.size());
+    int movesToCheck = std::min(25, (int)emptyCells.size());  // Increased from 20
     
     for (int i = 0; i < movesToCheck; ++i) {
         grid.makeMove(emptyCells[i]);
@@ -98,9 +98,15 @@ double Minimax::evaluatePosition(const HexGrid& grid, Player player) {
         else if (kv.second == opponent) oppStones++;
     }
     
-    double score = (myConnectivity - oppConnectivity) * 5.0;
+    // DEFENSIVE BOOST: Heavily prioritize blocking opponent!
+    double score = (myConnectivity - oppConnectivity * 1.5) * 5.0;  // Opponent connectivity matters MORE
     score += (myBridges - oppBridges) * 2.0;
     score += (myStones - oppStones) * 0.5;
+    
+    // CRITICAL: If opponent is very close to winning, strongly penalize!
+    if (oppConnectivity > HexGrid::BOARD_SIZE * 0.7) {  // Opponent 70% connected
+        score -= 50.0;  // Big penalty!
+    }
     
     return score;
 }

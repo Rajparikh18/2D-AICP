@@ -232,11 +232,11 @@ void DrawHexBoard(HDC hdc) {
         DrawHex(hdc, kv.first, kv.first == g_hoveredHex);
     }
     
-    // Draw edge highlights
-    SetDCPenColor(hdc, RGB(231, 76, 60));  // RED
-    SelectObject(hdc, GetStockObject(DC_PEN));
+    // Draw edge highlights - RED (top and bottom)
     HPEN redPen = CreatePen(PS_SOLID, 3, RGB(231, 76, 60));
-    SelectObject(hdc, redPen);
+    HBRUSH redBrush = (HBRUSH)GetStockObject(NULL_BRUSH);  // Hollow brush
+    HPEN oldPen = (HPEN)SelectObject(hdc, redPen);
+    HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, redBrush);
     
     for (const HexCoord& coord : g_grid->getTopEdge()) {
         POINT pt = HexToPixel(coord);
@@ -247,11 +247,15 @@ void DrawHexBoard(HDC hdc) {
         Ellipse(hdc, pt.x - 30, pt.y - 30, pt.x + 30, pt.y + 30);
     }
     
+    SelectObject(hdc, oldPen);
+    SelectObject(hdc, oldBrush);
     DeleteObject(redPen);
     
-    // BLUE edges
+    // Draw edge highlights - BLUE (left and right)
     HPEN bluePen = CreatePen(PS_SOLID, 3, RGB(52, 152, 219));
-    SelectObject(hdc, bluePen);
+    HBRUSH blueBrush = (HBRUSH)GetStockObject(NULL_BRUSH);  // Hollow brush
+    oldPen = (HPEN)SelectObject(hdc, bluePen);
+    oldBrush = (HBRUSH)SelectObject(hdc, blueBrush);
     
     for (const HexCoord& coord : g_grid->getLeftEdge()) {
         POINT pt = HexToPixel(coord);
@@ -262,6 +266,8 @@ void DrawHexBoard(HDC hdc) {
         Ellipse(hdc, pt.x - 30, pt.y - 30, pt.x + 30, pt.y + 30);
     }
     
+    SelectObject(hdc, oldPen);
+    SelectObject(hdc, oldBrush);
     DeleteObject(bluePen);
 }
 
@@ -435,10 +441,12 @@ void ProcessMove(HWND hwnd, const HexCoord& coord) {
         DispatchMessage(&msg);
     }
     
+    // Check for winner after player's move
     Player winner = g_grid->getWinner();
     if (winner != Player::NONE) {
         g_gameOver = true;
         InvalidateRect(hwnd, NULL, FALSE);
+        UpdateWindow(hwnd);
         
         std::string msg = (winner == Player::RED) ? "RED WINS!" : "BLUE WINS!";
         MessageBoxA(hwnd, msg.c_str(), "Game Over", MB_OK | MB_ICONINFORMATION);
@@ -468,19 +476,30 @@ void ProcessMove(HWND hwnd, const HexCoord& coord) {
 void MakeAIMove(HWND hwnd) {
     g_lastAIMove = g_ai->calculateMove(*g_grid);
     
-    if (g_lastAIMove.move.coord.q >= 0) {
-        g_grid->makeMove(g_lastAIMove.move.coord);
-        g_moveCount++;
-        g_aiThinking = false;
-        InvalidateRect(hwnd, NULL, FALSE);
+    if (g_lastAIMove.move.coord.q >= 0 && g_lastAIMove.move.coord.q < HexGrid::BOARD_SIZE &&
+        g_lastAIMove.move.coord.r >= 0 && g_lastAIMove.move.coord.r < HexGrid::BOARD_SIZE) {
         
-        Player winner = g_grid->getWinner();
-        if (winner != Player::NONE) {
-            g_gameOver = true;
+        bool success = g_grid->makeMove(g_lastAIMove.move.coord);
+        
+        if (success) {
+            g_moveCount++;
+            g_aiThinking = false;
             InvalidateRect(hwnd, NULL, FALSE);
+            UpdateWindow(hwnd);
             
-            std::string msg = (winner == Player::RED) ? "RED WINS!" : "BLUE WINS!";
-            MessageBoxA(hwnd, msg.c_str(), "Game Over", MB_OK | MB_ICONINFORMATION);
+            // Check for winner after AI's move
+            Player winner = g_grid->getWinner();
+            if (winner != Player::NONE) {
+                g_gameOver = true;
+                InvalidateRect(hwnd, NULL, FALSE);
+                UpdateWindow(hwnd);
+                
+                std::string msg = (winner == Player::RED) ? "RED WINS!" : "BLUE WINS!";
+                MessageBoxA(hwnd, msg.c_str(), "Game Over", MB_OK | MB_ICONINFORMATION);
+            }
+        } else {
+            g_aiThinking = false;
+            InvalidateRect(hwnd, NULL, FALSE);
         }
     } else {
         g_aiThinking = false;
