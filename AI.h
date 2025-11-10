@@ -3,12 +3,6 @@
 #include "Minimax.h"
 #include "MonteCarlo.h"
 
-enum class Difficulty {
-    EASY,
-    MEDIUM,
-    HARD
-};
-
 struct MoveInfo {
     Move move;
     double score;
@@ -16,17 +10,22 @@ struct MoveInfo {
     int simulations;
     double winRate;
     int thinkTime;
+    bool isWinningMove;
+    bool isBlockingMove;
 };
 
 class AI {
 public:
-    AI(Difficulty difficulty = Difficulty::MEDIUM);
+    AI();
     
-    void setDifficulty(Difficulty difficulty);
     MoveInfo calculateMove(HexGrid& grid);
     
 private:
-    Difficulty difficulty;
     Minimax minimax;
     MonteCarlo monteCarlo;
+    
+    // Critical move detection
+    HexCoord findImmediateWin(HexGrid& grid, Player player);
+    HexCoord findImmediateBlock(HexGrid& grid, Player player);
+    std::vector<HexCoord> findCriticalCells(HexGrid& grid, Player player);
 };

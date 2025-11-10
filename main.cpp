@@ -41,7 +41,7 @@ void NewGame(HWND hwnd);
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     // Initialize game
     g_grid = new HexGrid();
-    g_ai = new AI(Difficulty::MEDIUM);
+    g_ai = new AI();  // Single difficulty - always plays optimally
     
     // Register window class
     const char CLASS_NAME[] = "HexGameClass";
@@ -166,15 +166,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     g_gameOver = false;
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
-            } else if (wParam == '1') {  // Easy
-                g_ai->setDifficulty(Difficulty::EASY);
-                InvalidateRect(hwnd, NULL, FALSE);
-            } else if (wParam == '2') {  // Medium
-                g_ai->setDifficulty(Difficulty::MEDIUM);
-                InvalidateRect(hwnd, NULL, FALSE);
-            } else if (wParam == '3') {  // Hard
-                g_ai->setDifficulty(Difficulty::HARD);
-                InvalidateRect(hwnd, NULL, FALSE);
             }
             return 0;
         }
@@ -385,6 +376,18 @@ void DrawInfoPanel(HDC hdc) {
     if (g_lastAIMove.thinkTime > 0) {
         char buffer[100];
         
+        // Show if it was a critical move
+        if (g_lastAIMove.isWinningMove) {
+            SetTextColor(hdc, RGB(0, 150, 0));
+            TextOutA(hdc, panelX, y, "WINNING MOVE!", 13);
+            y += 25;
+        } else if (g_lastAIMove.isBlockingMove) {
+            SetTextColor(hdc, RGB(220, 50, 50));
+            TextOutA(hdc, panelX, y, "BLOCKING MOVE!", 14);
+            y += 25;
+        }
+        
+        SetTextColor(hdc, RGB(0, 0, 0));
         sprintf(buffer, "Think time: %d ms", g_lastAIMove.thinkTime);
         TextOutA(hdc, panelX, y, buffer, strlen(buffer));
         y += 25;
@@ -415,8 +418,13 @@ void DrawInfoPanel(HDC hdc) {
     TextOutA(hdc, panelX, y, "N - New Game", 12);
     y += 20;
     TextOutA(hdc, panelX, y, "Ctrl+Z - Undo", 13);
+    y += 30;
+    
+    SetTextColor(hdc, RGB(231, 76, 60));
+    TextOutA(hdc, panelX, y, "You: RED (Top-Bottom)", 21);
     y += 20;
-    TextOutA(hdc, panelX, y, "1/2/3 - Difficulty", 18);
+    SetTextColor(hdc, RGB(52, 152, 219));
+    TextOutA(hdc, panelX, y, "AI: BLUE (Left-Right)", 21);
     
     DeleteObject(infoFont);
 }
