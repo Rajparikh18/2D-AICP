@@ -8,8 +8,8 @@
 #define M_PI 3.14159265358979323846
 
 // Window dimensions
-const int WINDOW_WIDTH = 1100;
-const int WINDOW_HEIGHT = 750;
+const int WINDOW_WIDTH = 900;
+const int WINDOW_HEIGHT = 700;
 
 // Hex rendering
 const double HEX_SIZE = 25.0;
@@ -325,12 +325,12 @@ void DrawInfoPanel(HDC hdc) {
     SelectObject(hdc, titleFont);
     SetTextColor(hdc, RGB(0, 0, 0));
     TextOutA(hdc, panelX, y, "Hex Game", 8);
-    y += 40;
+    y += 50;
     
     DeleteObject(titleFont);
     
     // Info font
-    HFONT infoFont = CreateFontA(18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+    HFONT infoFont = CreateFontA(20, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                                 DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
                                 CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
                                 DEFAULT_PITCH | FF_SWISS, "Arial");
@@ -341,14 +341,7 @@ void DrawInfoPanel(HDC hdc) {
     SetTextColor(hdc, (current == Player::RED) ? RGB(231, 76, 60) : RGB(52, 152, 219));
     std::string turnText = (current == Player::RED) ? "Turn: RED" : "Turn: BLUE";
     TextOutA(hdc, panelX, y, turnText.c_str(), turnText.length());
-    y += 30;
-    
-    // Move count
-    SetTextColor(hdc, RGB(0, 0, 0));
-    char moveBuffer[50];
-    sprintf(moveBuffer, "Move: %d", g_moveCount);
-    TextOutA(hdc, panelX, y, moveBuffer, strlen(moveBuffer));
-    y += 30;
+    y += 40;
     
     // Game status
     if (g_gameOver) {
@@ -356,75 +349,24 @@ void DrawInfoPanel(HDC hdc) {
         SetTextColor(hdc, (winner == Player::RED) ? RGB(231, 76, 60) : RGB(52, 152, 219));
         std::string winText = (winner == Player::RED) ? "RED WINS!" : "BLUE WINS!";
         TextOutA(hdc, panelX, y, winText.c_str(), winText.length());
-        y += 30;
+        y += 40;
     }
-    
-    y += 20;
-    
-    // AI Stats
-    SetTextColor(hdc, RGB(0, 0, 0));
-    TextOutA(hdc, panelX, y, "--- AI Statistics ---", 21);
-    y += 30;
     
     // Show thinking indicator
     if (g_aiThinking) {
         SetTextColor(hdc, RGB(52, 152, 219));
         TextOutA(hdc, panelX, y, "AI is thinking...", 17);
-        y += 25;
-    }
-    
-    if (g_lastAIMove.thinkTime > 0) {
-        char buffer[100];
-        
-        // Show if it was a critical move
-        if (g_lastAIMove.isWinningMove) {
-            SetTextColor(hdc, RGB(0, 150, 0));
-            TextOutA(hdc, panelX, y, "WINNING MOVE!", 13);
-            y += 25;
-        } else if (g_lastAIMove.isBlockingMove) {
-            SetTextColor(hdc, RGB(220, 50, 50));
-            TextOutA(hdc, panelX, y, "BLOCKING MOVE!", 14);
-            y += 25;
-        }
-        
-        SetTextColor(hdc, RGB(0, 0, 0));
-        sprintf(buffer, "Think time: %d ms", g_lastAIMove.thinkTime);
-        TextOutA(hdc, panelX, y, buffer, strlen(buffer));
-        y += 25;
-        
-        sprintf(buffer, "Nodes: %d", g_lastAIMove.nodesEvaluated);
-        TextOutA(hdc, panelX, y, buffer, strlen(buffer));
-        y += 25;
-        
-        sprintf(buffer, "Simulations: %d", g_lastAIMove.simulations);
-        TextOutA(hdc, panelX, y, buffer, strlen(buffer));
-        y += 25;
-        
-        sprintf(buffer, "Win rate: %.1f%%", g_lastAIMove.winRate * 100.0);
-        TextOutA(hdc, panelX, y, buffer, strlen(buffer));
-        y += 25;
-        
-        sprintf(buffer, "Score: %.1f", g_lastAIMove.score);
-        TextOutA(hdc, panelX, y, buffer, strlen(buffer));
-        y += 25;
+        y += 40;
     }
     
     y += 30;
     
-    // Controls
-    SetTextColor(hdc, RGB(100, 100, 100));
-    TextOutA(hdc, panelX, y, "Controls:", 9);
-    y += 25;
-    TextOutA(hdc, panelX, y, "N - New Game", 12);
-    y += 20;
-    TextOutA(hdc, panelX, y, "Ctrl+Z - Undo", 13);
-    y += 30;
-    
+    // Simple player goals
     SetTextColor(hdc, RGB(231, 76, 60));
-    TextOutA(hdc, panelX, y, "You: RED (Top-Bottom)", 21);
-    y += 20;
+    TextOutA(hdc, panelX, y, "RED: Top to Bottom", 18);
+    y += 30;
     SetTextColor(hdc, RGB(52, 152, 219));
-    TextOutA(hdc, panelX, y, "AI: BLUE (Left-Right)", 21);
+    TextOutA(hdc, panelX, y, "BLUE: Left to Right", 19);
     
     DeleteObject(infoFont);
 }
