@@ -26,6 +26,13 @@ public:
     const std::unordered_map<HexCoord, Player>& getGrid() const { return grid; }
     const std::vector<Move>& getMoveHistory() const { return moveHistory; }
     
+    // Place a move for a specific player (used for safe simulation)
+    bool makeMoveFor(const HexCoord& coord, Player player);
+    
+    // Simulate a move without affecting move history (for AI evaluation)
+    bool simulateMove(const HexCoord& coord, Player player);
+    void undoSimulation(const HexCoord& coord);
+    
 private:
     std::unordered_map<HexCoord, Player> grid;
     Player currentPlayer;

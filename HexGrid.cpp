@@ -39,6 +39,34 @@ bool HexGrid::makeMove(const HexCoord& coord) {
     return false;
 }
 
+// Place a move explicitly for the given player (used ONLY for simulation - doesn't change turn)
+bool HexGrid::makeMoveFor(const HexCoord& coord, Player player) {
+    auto it = grid.find(coord);
+    if (it != grid.end() && it->second == Player::NONE) {
+        Move move(coord, player);
+        grid[coord] = player;
+        moveHistory.push_back(move);
+        // DON'T change currentPlayer - this is for simulation only!
+        // The calling code will handle turn management properly
+        return true;
+    }
+    return false;
+}
+
+// Simulate a move without affecting move history (safer for AI evaluation)
+bool HexGrid::simulateMove(const HexCoord& coord, Player player) {
+    auto it = grid.find(coord);
+    if (it != grid.end() && it->second == Player::NONE) {
+        grid[coord] = player;
+        return true;
+    }
+    return false;
+}
+
+void HexGrid::undoSimulation(const HexCoord& coord) {
+    grid[coord] = Player::NONE;
+}
+
 void HexGrid::undoMove() {
     if (!moveHistory.empty()) {
         Move lastMove = moveHistory.back();

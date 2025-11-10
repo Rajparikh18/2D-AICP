@@ -136,9 +136,10 @@ HexCoord AI::findImmediateWin(HexGrid& grid, Player player) {
     
     // Quick check on only relevant cells
     for (const HexCoord& coord : candidateCells) {
-        grid.makeMove(coord);
+        // Simulate AI move using the safe simulateMove method
+        grid.simulateMove(coord, player);
         Player winner = grid.getWinner();
-        grid.undoMove();
+        grid.undoSimulation(coord);
         
         if (winner == player) {
             return coord;
@@ -169,12 +170,13 @@ HexCoord AI::findImmediateBlock(HexGrid& grid, Player opponent) {
         }
     }
     
-    // Quick check on only relevant cells
+    // Quick check on only relevant cells  
     for (const HexCoord& coord : candidateCells) {
-        grid.makeMove(coord);
+        // Simulate opponent move using the safe simulateMove method
+        grid.simulateMove(coord, opponent);
         Player winner = grid.getWinner();
-        grid.undoMove();
-        
+        grid.undoSimulation(coord);
+
         if (winner == opponent) {
             return coord;
         }

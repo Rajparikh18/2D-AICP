@@ -106,7 +106,7 @@ double MonteCarlo::scoreMoveHeuristic(HexGrid& grid, const HexCoord& move, Playe
     double score = 0.0;
     
     // 1. Check immediate win/block
-    grid.makeMove(move);
+    grid.makeMoveFor(move, player);
     Player winner = grid.getWinner();
     if (winner == player) {
         grid.undoMove();
@@ -119,7 +119,7 @@ double MonteCarlo::scoreMoveHeuristic(HexGrid& grid, const HexCoord& move, Playe
     double oppConnectivityBefore = PathFinding::calculateConnectivity(grid, opponent);
     
     // 3. Make the move and calculate connectivity AFTER
-    grid.makeMove(move);
+    grid.makeMoveFor(move, player);
     double myConnectivityAfter = PathFinding::calculateConnectivity(grid, player);
     double oppConnectivityAfter = PathFinding::calculateConnectivity(grid, opponent);
     grid.undoMove();
@@ -191,7 +191,8 @@ std::vector<HexCoord> MonteCarlo::orderMovesByHeuristic(HexGrid& grid, const std
     
     // Score EVERY move by actual connectivity impact
     for (const HexCoord& move : moves) {
-        grid.makeMove(move);
+        // score as if 'player' played the move
+        grid.makeMoveFor(move, player);
         
         // Check immediate win
         if (grid.getWinner() == player) {
